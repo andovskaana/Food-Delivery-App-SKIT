@@ -1,0 +1,38 @@
+Feature: Orders (customer cart, address update)
+
+  Background:
+    * url serviceHostUrl
+    * header Content-Type = 'application/json'
+    * header Accept = '*/*'
+    # Login како customer (cart е user-scoped)
+    * def customerCreds = { username: 'customer', password: 'customer' }
+    Given path '/api/user/login'
+    And request { username: '#(customerCreds.username)', password: '#(customerCreds.password)' }
+    When method post
+    Then status 200
+    * def TOKEN = response.token
+    * header Authorization = 'Bearer ' + TOKEN
+
+  @cart
+  Scenario: Get current cart
+    Given path '/api/orders/cart'
+    When method get
+    Then status 200
+    And match response contains { id: '#number' }
+
+  # Ако адресата кај тебе е AddressDto со street/city/zip/... прилагоди ги полињата
+  @address_update
+  Scenario: Update address for order id=1
+    Given path '/api/orders/address/1'
+    And request
+    """
+    {
+      "street": "Partizanska 12",
+      "city": "Skopje",
+      "zip": "1000",
+      "country": "MK"
+    }
+    """
+    When method put
+    Then status 200
+    And match response contains { id: 1 }

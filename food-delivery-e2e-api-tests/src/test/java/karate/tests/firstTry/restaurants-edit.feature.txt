@@ -1,0 +1,33 @@
+Feature: Edit restaurant by id (uses global Authorization header)
+
+  Background:
+    * url serviceHostUrl
+    # 1) get credentials once per run
+    * def creds = callonce read('../auth/basic-auth.js') { user: 'admin' }
+    # 2) perform login once per run (and get token)
+    * def auth  = callonce read('../auth/login.feature') { user: 'admin' }
+    # 3) set global headers (Authorization comes from auth.authToken)
+    * header Authorization = 'Bearer ' + auth.authToken
+    * header Content-Type = 'application/json'
+
+  Scenario: Edit order id=1
+    Given path '/api/products/edit/1'
+    And request
+    """
+    {"id":1,"name":"Nachos","description":"Мексикански чипс прелиен со топен кашкавал и пикантен начос кашкавал, сервиран со салса и крем сос","price":450,"quantity":100,"restaurantId":1,"isAvailable":true,"category":"Стартери 🧀","imageUrl":"https://www.korpa.ba/product_uploads/BsQOsbCBZe6eKxKzvvXBz0b0aGd0uTJT.jpg"}"""
+    When method put
+    Then status 200
+    And match response contains { name: 'Nachos' }
+
+
+  Scenario: Edit restaurant id=1
+    Given path '/api/restaurants/edit/1'
+    And request
+    """
+    { "name": "Amigos", "description": "Mexican restaurant" }
+    """
+    When method put
+    Then status 200
+    And match response contains { name: 'Amigos' }
+
+
