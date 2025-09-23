@@ -16,6 +16,12 @@ Feature: Products CRUD and cart operations (id-safe)
     When method get
     Then status 200
 
+  # Public: Get by ID with details
+  Scenario: Get product details (public)
+    Given path '/api/products/details/1'
+    When method get
+    Then status 200
+
   # End-to-end: CREATE -> GET -> EDIT -> ADD/REMOVE TO ORDER -> DELETE -> VERIFY DELETED
   Scenario: Admin creates product, edits, customer adds/removes to order, admin deletes (id-safe)
     # ===== CREATE =====
@@ -95,12 +101,16 @@ Feature: Products CRUD and cart operations (id-safe)
     When method get
     Then status 404
 
-
-
   # Negative: add-to-order non-existent product -> expect 404/400/403 (прилагоди)
   Scenario: Customer adds non-existent product to order
     * header Authorization = 'Bearer ' + customerToken
     * def fakeId = 999999999
     Given path '/api/products/add-to-order', fakeId
     When method post
-    Then status 403
+    Then status 403  # Adjust based on impl
+
+  # Negative: Get details non-existent
+  Scenario: Get details for non-existent product
+    Given path '/api/products/details/999999'
+    When method get
+    Then status 404
