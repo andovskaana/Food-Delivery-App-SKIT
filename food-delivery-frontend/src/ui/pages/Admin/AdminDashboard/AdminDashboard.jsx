@@ -7,7 +7,9 @@ import FastfoodIcon from '@mui/icons-material/Fastfood';
 
 const AdminDashboard = () => {
     return (
-        <Box sx={{
+        <Box
+            data-testid="admin-dashboard-page"
+            sx={{
             display: "flex",                 // enable flexbox
             flexDirection: "column",         // stack header + grid vertically
             alignItems: "center",            // horizontal center
@@ -30,8 +32,14 @@ const AdminDashboard = () => {
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Manage users, roles, and permissions
                             </Typography>
-                            <Button variant="contained" component={Link} to="/admin/users" fullWidth>
-                                Manage Users
+                            <Button
+                                data-testid="admin-manage-users-btn"
+                                variant="contained"
+                                component={Link}
+                                to="/admin/users"
+                                fullWidth
+                            >
+                            Manage Users
                             </Button>
                         </CardContent>
                     </Card>
@@ -47,8 +55,14 @@ const AdminDashboard = () => {
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Add, edit, and manage restaurants
                             </Typography>
-                            <Button variant="contained" component={Link} to="/admin/restaurants" fullWidth>
-                                Manage Restaurants
+                            <Button
+                                data-testid="admin-manage-restaurants-btn"
+                                variant="contained"
+                                component={Link}
+                                to="/admin/restaurants"
+                                fullWidth
+                            >
+                            Manage Restaurants
                             </Button>
                         </CardContent>
                     </Card>
@@ -64,8 +78,14 @@ const AdminDashboard = () => {
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Manage menu items and products
                             </Typography>
-                            <Button variant="contained" component={Link} to="/admin/products" fullWidth>
-                                Manage Products
+                            <Button
+                                data-testid="admin-manage-products-btn"
+                                variant="contained"
+                                component={Link}
+                                to="/admin/products"
+                                fullWidth
+                            >
+                            Manage Products
                             </Button>
                         </CardContent>
                     </Card>

@@ -1,24 +1,63 @@
 import React from 'react';
 import useAuth from "../../../../hooks/useAuth.js";
-import {Navigate, Outlet, useLocation} from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 
-const ProtectedRoute = ({role}) => {
-    const {isLoading, user} = useAuth();
+const ProtectedRoute = ({ role }) => {
+    const { isLoading, user } = useAuth();
     const location = useLocation();
 
-    if (isLoading) return null;
+    if (isLoading) {
+        return (
+            <span
+                data-testid="protected-loading"
+                style={{ display: "none" }}
+            />
+        );
+    }
 
-    // not logged in → go to login and remember current path
+    // Not logged in → go to login
     if (user === null) {
-        return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+        return (
+            <>
+                <span
+                    data-testid="protected-redirect-unauth"
+                    style={{ display: "none" }}
+                />
+                <Navigate
+                    to="/login"
+                    replace
+                    state={{ from: location.pathname + location.search }}
+                />
+            </>
+        );
     }
 
-    // logged in but missing role → also go to login (or you could send to /)
+    // Logged in but missing role
     if (role && !user.roles?.includes(role)) {
-        return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+        return (
+            <>
+                <span
+                    data-testid="protected-redirect-forbidden"
+                    style={{ display: "none" }}
+                />
+                <Navigate
+                    to="/login"
+                    replace
+                    state={{ from: location.pathname + location.search }}
+                />
+            </>
+        );
     }
 
-    return <Outlet/>;
+    return (
+        <>
+            <span
+                data-testid="protected-allowed"
+                style={{ display: "none" }}
+            />
+            <Outlet />
+        </>
+    );
 };
 
 export default ProtectedRoute;

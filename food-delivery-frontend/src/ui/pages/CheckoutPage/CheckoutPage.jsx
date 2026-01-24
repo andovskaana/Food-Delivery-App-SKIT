@@ -51,7 +51,6 @@ const CheckoutPage = () => {
         return { items, subtotal, delivery, tax, total, currency: order?.currency ?? "€" };
     }, [order]);
 
-    // Simulated flow
     const simulateSuccess = async () => {
         if (!payment?.id) return;
         setBusy(true);
@@ -62,6 +61,7 @@ const CheckoutPage = () => {
         setAlertOpen(true);
         navigate("/");
     };
+
     const simulateFailure = async () => {
         if (!payment?.id) return;
         setBusy(true);
@@ -82,14 +82,24 @@ const CheckoutPage = () => {
     const usingRealStripe = !!stripePromise && hasClientSecret;
 
     return (
-        <Box sx={{ maxWidth: 1100, mx: "auto" }}>
+        <Box
+            data-testid="checkout-page"
+            sx={{ maxWidth: 1100, mx: "auto" }}
+        >
             {/* Page title */}
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+            <Stack
+                data-testid="checkout-header"
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ mb: 2 }}
+            >
                 <ReceiptLongIcon color="primary" />
                 <Typography variant="h5" sx={{ fontWeight: 800 }}>
                     Checkout
                 </Typography>
                 <Chip
+                    data-testid="checkout-mode-chip"
                     size="small"
                     label={usingRealStripe ? "Test Mode (Stripe)" : "Demo Mode"}
                     color={usingRealStripe ? "primary" : "default"}
@@ -98,9 +108,10 @@ const CheckoutPage = () => {
             </Stack>
 
             <Grid container spacing={3}>
-                {/* LEFT: Payment card */}
+                {/* LEFT: Payment */}
                 <Grid item xs={12} md={7}>
                     <Card
+                        data-testid="checkout-payment-card"
                         sx={{
                             borderRadius: 3,
                             boxShadow: "0 4px 18px rgba(16,24,40,.06)",
@@ -142,14 +153,22 @@ const CheckoutPage = () => {
                                         icon={<InfoOutlinedIcon fontSize="small" />}
                                         sx={{ mb: 2 }}
                                     >
-                                        No Stripe keys/client secret detected. You’re in demo mode — use the buttons
-                                        below to simulate outcomes.
+                                        Demo mode enabled. Use the buttons below to simulate outcomes.
                                     </MuiInfoAlert>
                                     <Stack direction="row" spacing={1}>
-                                        <Button disabled={!payment || busy} variant="contained" onClick={simulateSuccess}>
+                                        <Button
+                                            data-testid="checkout-simulate-success"
+                                            disabled={!payment || busy}
+                                            variant="contained"
+                                            onClick={simulateSuccess}
+                                        >
                                             Simulate success
                                         </Button>
-                                        <Button disabled={!payment || busy} onClick={simulateFailure}>
+                                        <Button
+                                            data-testid="checkout-simulate-failure"
+                                            disabled={!payment || busy}
+                                            onClick={simulateFailure}
+                                        >
                                             Simulate failure
                                         </Button>
                                     </Stack>
@@ -158,6 +177,7 @@ const CheckoutPage = () => {
 
                             {payment && (
                                 <Typography
+                                    data-testid="checkout-payment-info"
                                     variant="caption"
                                     color="text.secondary"
                                     sx={{ display: "block", mt: 2 }}
@@ -168,28 +188,23 @@ const CheckoutPage = () => {
 
                             <Divider sx={{ my: 2 }} />
 
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={1}
-                                sx={{ color: "text.secondary" }}
-                            >
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ color: "text.secondary" }}>
                                 <LockOutlinedIcon fontSize="small" />
                                 <Typography variant="caption">
-                                    Payments are secured & encrypted by Stripe. Use test card{" "}
-                                    <Tooltip title="Card: 4242 4242 4242 4242 · any future date · any CVC">
+                                    Payments are secured by Stripe. Test card{" "}
+                                    <Tooltip title="4242 4242 4242 4242 · any future date · any CVC">
                                         <strong>4242&nbsp;4242&nbsp;4242&nbsp;4242</strong>
                                     </Tooltip>
-                                    .
                                 </Typography>
                             </Stack>
                         </CardContent>
                     </Card>
                 </Grid>
 
-                {/* RIGHT: Order summary */}
+                {/* RIGHT: Summary */}
                 <Grid item xs={12} md={5}>
                     <Card
+                        data-testid="checkout-summary-card"
                         sx={{
                             borderRadius: 3,
                             boxShadow: "0 4px 18px rgba(16,24,40,.06)",
@@ -208,37 +223,46 @@ const CheckoutPage = () => {
                             <Stack spacing={1.25}>
                                 {(summary.items.length
                                         ? summary.items
-                                        : [{ name: "Your items", quantity: 1, price: summary.subtotal }]
+                                        : [{ name: "Your items", quantity: 1, unitPriceSnapshot: summary.subtotal }]
                                 ).map((it, idx) => (
                                     <Stack
                                         key={idx}
                                         direction="row"
                                         justifyContent="space-between"
-                                        sx={{ color: "text.secondary" }}
+                                        data-testid={`checkout-summary-item-${idx}`}
                                     >
                                         <Typography variant="body2">
                                             {it.quantity ? `${it.quantity} × ` : ""}
-                                            {it.name ?? "Item"}
+                                            {it.name}
                                         </Typography>
                                         <Typography variant="body2">
                                             {summary.currency}
-                                            {(it.unitPriceSnapshot * (it.quantity ?? 1)).toFixed?.(2)}
+                                            {(it.unitPriceSnapshot * (it.quantity ?? 1)).toFixed(2)}
                                         </Typography>
                                     </Stack>
                                 ))}
+
                                 <Divider sx={{ my: 0.75 }} />
-                                <Row label="Subtotal" value={summary.subtotal} currency={summary.currency} />
-                                <Row label="Delivery" value={summary.delivery} currency={summary.currency} />
-                                <Row label="Tax" value={summary.tax} currency={summary.currency} />
+
+                                <Row label="Subtotal" value={summary.subtotal} currency={summary.currency} testId="subtotal" />
+                                <Row label="Delivery" value={summary.delivery} currency={summary.currency} testId="delivery" />
+                                <Row label="Tax" value={summary.tax} currency={summary.currency} testId="tax" />
+
                                 <Divider sx={{ my: 0.75 }} />
-                                <Row label="Total" value={summary.total} currency={summary.currency} strong />
+
+                                <Row label="Total" value={summary.total} currency={summary.currency} strong testId="total" />
                             </Stack>
                         </CardContent>
                     </Card>
                 </Grid>
             </Grid>
 
-            <Alert open={alertOpen} onClose={() => setAlertOpen(false)} message={alertMessage} />
+            <Alert
+                data-testid="checkout-alert"
+                open={alertOpen}
+                onClose={() => setAlertOpen(false)}
+                message={alertMessage}
+            />
         </Box>
     );
 };
@@ -246,9 +270,14 @@ const CheckoutPage = () => {
 export default CheckoutPage;
 
 /* ---------- helpers ---------- */
-function Row({ label, value = 0, currency = "€", strong = false }) {
+function Row({ label, value = 0, currency = "€", strong = false, testId }) {
     return (
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+            data-testid={`checkout-summary-${testId}`}
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+        >
             <Typography variant={strong ? "subtitle2" : "body2"} sx={{ fontWeight: strong ? 700 : 400 }}>
                 {label}
             </Typography>
@@ -291,6 +320,7 @@ function StripeForm({ clientSecret, busy, setBusy, onPaid, setAlertMessage, setA
     return (
         <Stack spacing={1.5}>
             <Box
+                data-testid="checkout-stripe-card"
                 sx={{
                     p: 1.5,
                     border: "1px solid",
@@ -306,8 +336,6 @@ function StripeForm({ clientSecret, busy, setBusy, onPaid, setAlertMessage, setA
                             base: {
                                 fontSize: "16px",
                                 "::placeholder": { color: "#9CA3AF" },
-                                fontFamily:
-                                    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif',
                             },
                             invalid: { color: "#ef4444" },
                         },
@@ -316,6 +344,7 @@ function StripeForm({ clientSecret, busy, setBusy, onPaid, setAlertMessage, setA
             </Box>
 
             <Button
+                data-testid="checkout-pay-btn"
                 variant="contained"
                 size="large"
                 onClick={handlePay}

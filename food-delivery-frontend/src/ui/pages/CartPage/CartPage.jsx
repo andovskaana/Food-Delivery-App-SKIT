@@ -21,6 +21,7 @@ function ConfirmPopup({ open, message, onCancel, onConfirm }) {
     if (!open) return null;
     return (
         <Box
+            data-testid="cart-confirm-overlay"
             sx={{
                 position: "fixed",
                 inset: 0,
@@ -33,6 +34,7 @@ function ConfirmPopup({ open, message, onCancel, onConfirm }) {
             }}
         >
             <Box
+                data-testid="cart-confirm-dialog"
                 sx={{
                     bgcolor: "white",
                     borderRadius: 3,
@@ -43,10 +45,22 @@ function ConfirmPopup({ open, message, onCancel, onConfirm }) {
                     textAlign: "center",
                 }}
             >
-                <Typography sx={{ mb: 2 }}>{message}</Typography>
+                <Typography data-testid="cart-confirm-message" sx={{ mb: 2 }}>
+                    {message}
+                </Typography>
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                    <Button onClick={onCancel}>Cancel</Button>
-                    <Button variant="contained" color="error" onClick={onConfirm}>
+                    <Button
+                        data-testid="cart-confirm-cancel-btn"
+                        onClick={onCancel}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="cart-confirm-ok-btn"
+                        variant="contained"
+                        color="error"
+                        onClick={onConfirm}
+                    >
                         Confirm
                     </Button>
                 </Box>
@@ -99,7 +113,10 @@ const CartPage = () => {
     if (loading) return <>Loading...</>;
 
     return (
-        <Box sx={{ maxWidth: 1000, mx: "auto", mt: 4, px: 2 }}>
+        <Box
+            data-testid="cart-page"
+            sx={{ maxWidth: 1000, mx: "auto", mt: 4, px: 2 }}
+        >
             {/* Header */}
             <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1 }}>
                 <ShoppingCartIcon color="primary" />
@@ -109,61 +126,106 @@ const CartPage = () => {
             </Box>
 
             {/* Order list */}
-            <OrderList order={order} onCheckout={onCheckout} onCancel={onCancel} refresh={refresh} />
+            <Box data-testid="cart-order-list">
+                <OrderList
+                    order={order}
+                    onCheckout={onCheckout}
+                    onCancel={onCancel}
+                    refresh={refresh}
+                />
+            </Box>
 
             {/* Address Dialog */}
-            <Dialog open={showAddressDialog} onClose={() => setShowAddressDialog(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ fontWeight: 700 }}>Enter Delivery Address</DialogTitle>
+            <Dialog
+                data-testid="cart-address-dialog"
+                open={showAddressDialog}
+                onClose={() => setShowAddressDialog(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Enter Delivery Address
+                </DialogTitle>
                 <Divider />
                 <DialogContent sx={{ mt: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                    >
                         Please provide your delivery details so we can bring your order right to your door.
                     </Typography>
 
                     <TextField
+                        data-testid="cart-address-line1"
                         fullWidth
                         margin="normal"
                         label="Address Line 1"
                         value={address.line1}
-                        onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+                        onChange={(e) =>
+                            setAddress({ ...address, line1: e.target.value })
+                        }
                     />
                     <TextField
+                        data-testid="cart-address-line2"
                         fullWidth
                         margin="normal"
                         label="Address Line 2"
                         value={address.line2}
-                        onChange={(e) => setAddress({ ...address, line2: e.target.value })}
+                        onChange={(e) =>
+                            setAddress({ ...address, line2: e.target.value })
+                        }
                     />
                     <TextField
+                        data-testid="cart-address-city"
                         fullWidth
                         margin="normal"
                         label="City"
                         value={address.city}
-                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                        onChange={(e) =>
+                            setAddress({ ...address, city: e.target.value })
+                        }
                     />
                     <TextField
+                        data-testid="cart-address-postal"
                         fullWidth
                         margin="normal"
                         label="Postal Code"
                         value={address.postalCode}
-                        onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+                        onChange={(e) =>
+                            setAddress({ ...address, postalCode: e.target.value })
+                        }
                     />
                     <TextField
+                        data-testid="cart-address-country"
                         fullWidth
                         margin="normal"
                         label="Country"
                         value={address.country}
-                        onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                        onChange={(e) =>
+                            setAddress({ ...address, country: e.target.value })
+                        }
                     />
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setShowAddressDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSaveAddress} sx={{ borderRadius: 2 }}>
+                    <Button
+                        data-testid="cart-address-cancel-btn"
+                        onClick={() => setShowAddressDialog(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="cart-address-save-btn"
+                        variant="contained"
+                        onClick={handleSaveAddress}
+                        sx={{ borderRadius: 2 }}
+                    >
                         Save & Continue
                     </Button>
                 </DialogActions>
             </Dialog>
 
+            {/* Confirm clear cart */}
             <ConfirmPopup
                 open={confirmOpen}
                 message="Remove all items from the cart?"
@@ -177,7 +239,13 @@ const CartPage = () => {
                 }}
             />
 
-            <Alert open={alertOpen} onClose={() => setAlertOpen(false)} message={alertMessage} />
+            {/* Alert */}
+            <Alert
+                open={alertOpen}
+                onClose={() => setAlertOpen(false)}
+                message={alertMessage}
+                data-testid="cart-alert"
+            />
         </Box>
     );
 };

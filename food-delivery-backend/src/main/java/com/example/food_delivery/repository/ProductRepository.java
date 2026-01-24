@@ -13,4 +13,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Override
     @Query("SELECT p FROM Product p ORDER BY p.id ASC")
     List<Product> findAll();
+
+    List<Product> findByRestaurant(Restaurant restaurant);
 }

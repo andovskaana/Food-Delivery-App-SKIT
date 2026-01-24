@@ -1,8 +1,24 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    Typography, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Button, Box, Dialog, DialogTitle,
-    DialogContent, DialogActions, TextField, MenuItem, Chip, IconButton, Stack
+    Typography,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Button,
+    Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    MenuItem,
+    Chip,
+    IconButton,
+    Stack
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,8 +47,6 @@ const AdminUsers = () => {
         try {
             const response = await axiosInstance.get('user/users');
             setUsers(response.data);
-        } catch (err) {
-            console.error('Error fetching users:', err);
         } finally {
             setLoading(false);
         }
@@ -43,52 +57,36 @@ const AdminUsers = () => {
     }, []);
 
     const handleEditUser = (user) => {
-        setEditUser({...user});
+        setEditUser({ ...user });
         setEditDialogOpen(true);
     };
 
     const handleSaveUser = async () => {
-        try {
-            await axiosInstance.put(`/user/edit/${editUser.username}`, editUser);
-            await fetchUsers();
-            setEditDialogOpen(false);
-            setEditUser(null);
-            alert('User updated successfully!');
-        } catch (err) {
-            alert('Failed to update user: ' + (err.response?.data?.message || err.message));
-        }
+        await axiosInstance.put(`/user/edit/${editUser.username}`, editUser);
+        await fetchUsers();
+        setEditDialogOpen(false);
+        setEditUser(null);
     };
 
     const handleDeleteUser = async (username) => {
         if (!window.confirm(`Are you sure you want to delete user "${username}"?`)) return;
-
-        try {
-            await axiosInstance.delete(`/user/delete/${username}`);
-            await fetchUsers();
-            alert('User deleted successfully!');
-        } catch (err) {
-            alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
-        }
+        await axiosInstance.delete(`/user/delete/${username}`);
+        await fetchUsers();
     };
 
     const handleAddUser = async () => {
-        try {
-            await axiosInstance.post(`/user/add`, newUser);
-            await fetchUsers();
-            setAddDialogOpen(false);
-            setNewUser({
-                username: '',
-                name: '',
-                surname: '',
-                email: '',
-                phone: '',
-                password: '',
-                role: 'ROLE_CUSTOMER'
-            });
-            alert('User added successfully!');
-        } catch (err) {
-            alert('Failed to add user: ' + (err.response?.data?.message || err.message));
-        }
+        await axiosInstance.post(`/user/add`, newUser);
+        await fetchUsers();
+        setAddDialogOpen(false);
+        setNewUser({
+            username: '',
+            name: '',
+            surname: '',
+            email: '',
+            phone: '',
+            password: '',
+            role: 'ROLE_CUSTOMER'
+        });
     };
 
     const getRoleColor = (role) => {
@@ -103,10 +101,11 @@ const AdminUsers = () => {
     if (loading) return <Typography>Loading...</Typography>;
 
     return (
-        <Box>
+        <Box data-testid="admin-users-page">
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
                 <Typography variant="h4">User Management</Typography>
                 <Button
+                    data-testid="admin-users-add-btn"
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={() => setAddDialogOpen(true)}
@@ -115,7 +114,10 @@ const AdminUsers = () => {
                 </Button>
             </Stack>
 
-            <TableContainer component={Paper}>
+            <TableContainer
+                data-testid="admin-users-table"
+                component={Paper}
+            >
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -129,13 +131,17 @@ const AdminUsers = () => {
                     </TableHead>
                     <TableBody>
                         {users.map((user) => (
-                            <TableRow key={user.username}>
+                            <TableRow
+                                key={user.username}
+                                data-testid={`admin-user-row-${user.username}`}
+                            >
                                 <TableCell>{user.username}</TableCell>
                                 <TableCell>{user.name} {user.surname}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>{user.phone}</TableCell>
                                 <TableCell>
                                     <Chip
+                                        data-testid={`admin-user-role-${user.username}`}
                                         label={user.role.replace('ROLE_', '')}
                                         color={getRoleColor(user.role)}
                                         size="small"
@@ -143,14 +149,14 @@ const AdminUsers = () => {
                                 </TableCell>
                                 <TableCell>
                                     <IconButton
-                                        color="primary"
+                                        data-testid={`admin-user-edit-${user.username}`}
                                         onClick={() => handleEditUser(user)}
                                         size="small"
                                     >
                                         <EditIcon />
                                     </IconButton>
                                     <IconButton
-                                        color="error"
+                                        data-testid={`admin-user-delete-${user.username}`}
                                         onClick={() => handleDeleteUser(user.username)}
                                         size="small"
                                     >
@@ -164,36 +170,62 @@ const AdminUsers = () => {
             </TableContainer>
 
             {/* Edit User Dialog */}
-            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                data-testid="admin-user-edit-dialog"
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>Edit User</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'grid', gap: 2, mt: 1 }}>
-                        <TextField label="Username" value={editUser?.username || ''} disabled />
                         <TextField
+                            data-testid="admin-user-edit-username"
+                            label="Username"
+                            value={editUser?.username || ''}
+                            disabled
+                        />
+                        <TextField
+                            data-testid="admin-user-edit-name"
                             label="Name"
                             value={editUser?.name || ''}
-                            onChange={(e) => setEditUser({...editUser, name: e.target.value})}
+                            onChange={(e) =>
+                                setEditUser({ ...editUser, name: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-edit-surname"
                             label="Surname"
                             value={editUser?.surname || ''}
-                            onChange={(e) => setEditUser({...editUser, surname: e.target.value})}
+                            onChange={(e) =>
+                                setEditUser({ ...editUser, surname: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-edit-email"
                             label="Email"
                             value={editUser?.email || ''}
-                            onChange={(e) => setEditUser({...editUser, email: e.target.value})}
+                            onChange={(e) =>
+                                setEditUser({ ...editUser, email: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-edit-phone"
                             label="Phone number"
                             value={editUser?.phone || ''}
-                            onChange={(e) => setEditUser({...editUser, phone: e.target.value})}
+                            onChange={(e) =>
+                                setEditUser({ ...editUser, phone: e.target.value })
+                            }
                         />
                         <TextField
                             select
+                            data-testid="admin-user-edit-role"
                             label="Role"
                             value={editUser?.role || ''}
-                            onChange={(e) => setEditUser({...editUser, role: e.target.value})}
+                            onChange={(e) =>
+                                setEditUser({ ...editUser, role: e.target.value })
+                            }
                         >
                             <MenuItem value="ROLE_CUSTOMER">Customer</MenuItem>
                             <MenuItem value="ROLE_COURIER">Courier</MenuItem>
@@ -202,52 +234,90 @@ const AdminUsers = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSaveUser} variant="contained">Save</Button>
+                    <Button
+                        data-testid="admin-user-edit-cancel-btn"
+                        onClick={() => setEditDialogOpen(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="admin-user-edit-save-btn"
+                        onClick={handleSaveUser}
+                        variant="contained"
+                    >
+                        Save
+                    </Button>
                 </DialogActions>
             </Dialog>
 
             {/* Add User Dialog */}
-            <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                data-testid="admin-user-add-dialog"
+                open={addDialogOpen}
+                onClose={() => setAddDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>Add User</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'grid', gap: 2, mt: 1 }}>
                         <TextField
+                            data-testid="admin-user-add-username"
                             label="Username"
                             value={newUser.username}
-                            onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, username: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-add-name"
                             label="Name"
                             value={newUser.name}
-                            onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, name: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-add-surname"
                             label="Surname"
                             value={newUser.surname}
-                            onChange={(e) => setNewUser({...newUser, surname: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, surname: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-add-phone"
                             label="Phone number"
                             value={newUser.phone}
-                            onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, phone: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-add-email"
                             label="Email"
                             value={newUser.email}
-                            onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, email: e.target.value })
+                            }
                         />
                         <TextField
+                            data-testid="admin-user-add-password"
                             label="Password"
                             type="password"
                             value={newUser.password}
-                            onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, password: e.target.value })
+                            }
                         />
                         <TextField
                             select
+                            data-testid="admin-user-add-role"
                             label="Role"
                             value={newUser.role}
-                            onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                            onChange={(e) =>
+                                setNewUser({ ...newUser, role: e.target.value })
+                            }
                         >
                             <MenuItem value="ROLE_CUSTOMER">Customer</MenuItem>
                             <MenuItem value="ROLE_COURIER">Courier</MenuItem>
@@ -256,8 +326,19 @@ const AdminUsers = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleAddUser} variant="contained">Add</Button>
+                    <Button
+                        data-testid="admin-user-add-cancel-btn"
+                        onClick={() => setAddDialogOpen(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="admin-user-add-save-btn"
+                        onClick={handleAddUser}
+                        variant="contained"
+                    >
+                        Add
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Box>

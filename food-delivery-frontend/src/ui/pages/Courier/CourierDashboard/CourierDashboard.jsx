@@ -22,7 +22,7 @@ import {
 import MuiAlert from "@mui/material/Alert";
 import axiosInstance from "../../../../axios/axios.js";
 import useAuth from "../../../../hooks/useAuth.js";
-import Alert from "../../../../common/Alert.jsx"; //
+import Alert from "../../../../common/Alert.jsx";
 
 const CourierDashboard = () => {
     const [confirmedOrders, setConfirmedOrders] = useState([]);
@@ -31,7 +31,6 @@ const CourierDashboard = () => {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
 
-    // Popover state
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState([]);
 
@@ -59,8 +58,6 @@ const CourierDashboard = () => {
             setConfirmedOrders(confirmedRes.data);
             setMyOrders(myOrdersRes.data);
             setMyDeliveredOrders(myDeliveredOrdersRes.data);
-        } catch (err) {
-            console.error("Error fetching orders:", err);
         } finally {
             setLoading(false);
         }
@@ -100,14 +97,10 @@ const CourierDashboard = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "CONFIRMED":
-                return "primary";
-            case "PICKED_UP":
-                return "warning";
-            case "DELIVERED":
-                return "success";
-            default:
-                return "default";
+            case "CONFIRMED": return "primary";
+            case "PICKED_UP": return "warning";
+            case "DELIVERED": return "success";
+            default: return "default";
         }
     };
 
@@ -115,57 +108,57 @@ const CourierDashboard = () => {
 
     const TruncatedCell = ({ children, title }) => (
         <Tooltip title={title || ""}>
-      <span
-          style={{
-              display: "inline-block",
-              maxWidth: "100%",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-          }}
-      >
-        {children}
-      </span>
+            <span style={{
+                display: "inline-block",
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+            }}>
+                {children}
+            </span>
         </Tooltip>
     );
 
     return (
-        <Box>
+        <Box data-testid="courier-page">
             <Typography variant="h4" sx={{ mb: 3 }}>
                 Courier Dashboard
             </Typography>
 
-            {/* Info banner (keep MUI look) */}
             <MuiAlert severity="info" sx={{ mb: 3 }}>
                 Welcome, {user?.username}! You can assign yourself to confirmed orders and track your deliveries.
             </MuiAlert>
 
-            {/* Available Orders Section */}
-            <Card sx={{ mb: 4 }}>
+            {/* Available Orders */}
+            <Card data-testid="courier-available-section" sx={{ mb: 4 }}>
                 <CardContent>
                     <Typography variant="h5" sx={{ mb: 2 }}>
                         Available Orders for Pickup
                     </Typography>
 
-                    <TableContainer component={Paper}>
+                    <TableContainer data-testid="courier-available-table" component={Paper}>
                         <Table sx={{ tableLayout: "fixed" }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ width: "10%" }}>Order ID</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Customer</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Status</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Restaurant</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Items</TableCell>
-                                    <TableCell sx={{ width: "17%" }}>Address</TableCell>
-                                    <TableCell sx={{ width: "13%" }}>Total</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Action</TableCell>
+                                    <TableCell>Order ID</TableCell>
+                                    <TableCell>Customer</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Restaurant</TableCell>
+                                    <TableCell>Items</TableCell>
+                                    <TableCell>Address</TableCell>
+                                    <TableCell>Total</TableCell>
+                                    <TableCell>Action</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {confirmedOrders
-                                    .filter((order) => order.status === "CONFIRMED")
-                                    .map((order) => (
-                                        <TableRow key={order.id}>
+                                    .filter(o => o.status === "CONFIRMED")
+                                    .map(order => (
+                                        <TableRow
+                                            key={order.id}
+                                            data-testid={`courier-available-row-${order.id}`}
+                                        >
                                             <TableCell>#{order.id}</TableCell>
                                             <TableCell>
                                                 <TruncatedCell title={order.userUsername}>
@@ -174,6 +167,7 @@ const CourierDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Chip
+                                                    data-testid={`courier-status-${order.id}`}
                                                     label={order.status}
                                                     color={getStatusColor(order.status)}
                                                     size="small"
@@ -186,6 +180,7 @@ const CourierDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Button
+                                                    data-testid={`courier-items-btn-${order.id}`}
                                                     variant="outlined"
                                                     size="small"
                                                     onClick={(e) => handleItemsClick(e, order.products)}
@@ -203,6 +198,7 @@ const CourierDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Button
+                                                    data-testid={`courier-assign-${order.id}`}
                                                     variant="contained"
                                                     size="small"
                                                     onClick={() => handleAssign(order.id)}
@@ -218,32 +214,35 @@ const CourierDashboard = () => {
                 </CardContent>
             </Card>
 
-            {/* My Active Deliveries */}
-            <Card>
+            {/* Active Deliveries */}
+            <Card data-testid="courier-active-section" sx={{ mb: 4 }}>
                 <CardContent>
                     <Typography variant="h5" sx={{ mb: 2 }}>
                         My Active Deliveries
                     </Typography>
 
-                    <TableContainer component={Paper}>
+                    <TableContainer data-testid="courier-active-table" component={Paper}>
                         <Table sx={{ tableLayout: "fixed" }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ width: "10%" }}>Order ID</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Customer</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Status</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Restaurant</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Items</TableCell>
-                                    <TableCell sx={{ width: "17%" }}>Address</TableCell>
-                                    <TableCell sx={{ width: "13%" }}>Total</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Action</TableCell>
+                                    <TableCell>Order ID</TableCell>
+                                    <TableCell>Customer</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Restaurant</TableCell>
+                                    <TableCell>Items</TableCell>
+                                    <TableCell>Address</TableCell>
+                                    <TableCell>Total</TableCell>
+                                    <TableCell>Action</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {myOrders
-                                    .filter((order) => order.status !== "DELIVERED")
-                                    .map((order) => (
-                                        <TableRow key={order.id}>
+                                    .filter(o => o.status !== "DELIVERED")
+                                    .map(order => (
+                                        <TableRow
+                                            key={order.id}
+                                            data-testid={`courier-active-row-${order.id}`}
+                                        >
                                             <TableCell>#{order.id}</TableCell>
                                             <TableCell>
                                                 <TruncatedCell title={order.userUsername}>
@@ -252,6 +251,7 @@ const CourierDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Chip
+                                                    data-testid={`courier-status-${order.id}`}
                                                     label={order.status}
                                                     color={getStatusColor(order.status)}
                                                     size="small"
@@ -264,6 +264,7 @@ const CourierDashboard = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Button
+                                                    data-testid={`courier-items-btn-${order.id}`}
                                                     variant="outlined"
                                                     size="small"
                                                     onClick={(e) => handleItemsClick(e, order.products)}
@@ -282,6 +283,7 @@ const CourierDashboard = () => {
                                             <TableCell>
                                                 {order.status === "PICKED_UP" && (
                                                     <Button
+                                                        data-testid={`courier-complete-${order.id}`}
                                                         variant="contained"
                                                         color="success"
                                                         size="small"
@@ -299,30 +301,33 @@ const CourierDashboard = () => {
                 </CardContent>
             </Card>
 
-            {/* My Delivered Orders */}
-            <Card sx={{ mt: 4 }}>
+            {/* Delivered Orders */}
+            <Card data-testid="courier-delivered-section">
                 <CardContent>
                     <Typography variant="h5" sx={{ mb: 2 }}>
                         My Delivered Orders
                     </Typography>
 
-                    <TableContainer component={Paper}>
+                    <TableContainer data-testid="courier-delivered-table" component={Paper}>
                         <Table sx={{ tableLayout: "fixed" }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ width: "10%" }}>Order ID</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Customer</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Status</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Restaurant</TableCell>
-                                    <TableCell sx={{ width: "10%" }}>Items</TableCell>
-                                    <TableCell sx={{ width: "17%" }}>Address</TableCell>
-                                    <TableCell sx={{ width: "13%" }}>Total</TableCell>
-                                    <TableCell sx={{ width: "15%" }}>Delivered At</TableCell>
+                                    <TableCell>Order ID</TableCell>
+                                    <TableCell>Customer</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Restaurant</TableCell>
+                                    <TableCell>Items</TableCell>
+                                    <TableCell>Address</TableCell>
+                                    <TableCell>Total</TableCell>
+                                    <TableCell>Delivered At</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {myDeliveredOrders.map((order) => (
-                                    <TableRow key={order.id}>
+                                {myDeliveredOrders.map(order => (
+                                    <TableRow
+                                        key={order.id}
+                                        data-testid={`courier-delivered-row-${order.id}`}
+                                    >
                                         <TableCell>#{order.id}</TableCell>
                                         <TableCell>
                                             <TruncatedCell title={order.userUsername}>
@@ -331,6 +336,7 @@ const CourierDashboard = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Chip
+                                                data-testid={`courier-status-${order.id}`}
                                                 label={order.status}
                                                 color={getStatusColor(order.status)}
                                                 size="small"
@@ -343,6 +349,7 @@ const CourierDashboard = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Button
+                                                data-testid={`courier-items-btn-${order.id}`}
                                                 variant="outlined"
                                                 size="small"
                                                 onClick={(e) => handleItemsClick(e, order.products)}
@@ -373,6 +380,7 @@ const CourierDashboard = () => {
 
             {/* Items Popover */}
             <Popover
+                data-testid="courier-items-popover"
                 open={open}
                 anchorEl={anchorEl}
                 onClose={handlePopoverClose}
@@ -380,11 +388,14 @@ const CourierDashboard = () => {
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
             >
                 <Box sx={{ p: 2, maxWidth: 250 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }} />
                     {selectedProducts.length > 0 ? (
                         <List dense>
                             {selectedProducts.map((p, i) => (
-                                <ListItem key={i} disablePadding>
+                                <ListItem
+                                    key={i}
+                                    data-testid={`courier-item-${i}`}
+                                    disablePadding
+                                >
                                     <ListItemText primary={p.name} />
                                 </ListItem>
                             ))}
@@ -394,7 +405,9 @@ const CourierDashboard = () => {
                     )}
                 </Box>
             </Popover>
+
             <Alert
+                data-testid="courier-alert"
                 open={alertOpen}
                 onClose={() => setAlertOpen(false)}
                 message={alertMessage}

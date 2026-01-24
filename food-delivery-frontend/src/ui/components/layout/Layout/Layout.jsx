@@ -18,17 +18,26 @@ const Layout = () => {
         "/forgot-password"
     ];
 
-    // check if current path starts with any of the noFooterPaths
     const hideFooter = noFooterPaths.some(path =>
         location.pathname.startsWith(path)
     );
 
     return (
-        <Box className="layout-box">
+        <Box
+            data-testid="app-layout"
+            className="layout-box"
+        >
             <Header />
-            <Container className="outlet-container" sx={{ my: 2 }} maxWidth="lg">
+
+            <Container
+                data-testid="layout-outlet"
+                className="outlet-container"
+                sx={{ my: 2 }}
+                maxWidth="lg"
+            >
                 <Outlet />
             </Container>
+
             {!hideFooter && <Footer />}
         </Box>
     );

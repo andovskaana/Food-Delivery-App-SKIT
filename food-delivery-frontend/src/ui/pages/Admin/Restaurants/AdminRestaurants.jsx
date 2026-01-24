@@ -31,7 +31,6 @@ const AdminRestaurants = () => {
     const [q, setQ] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // Dialog state
     const [openDialog, setOpenDialog] = useState(false);
     const [editing, setEditing] = useState(null);
     const [errors, setErrors] = useState({});
@@ -41,7 +40,6 @@ const AdminRestaurants = () => {
         restaurantRepository
             .findAll()
             .then((res) => live && setRestaurants(res?.data || []))
-            .catch((err) => console.error("Load restaurants failed", err))
             .finally(() => live && setLoading(false));
         return () => {
             live = false;
@@ -87,94 +85,62 @@ const AdminRestaurants = () => {
     };
 
     const onDelete = async (r) => {
-        const ok = window.confirm(`Delete "${r.name}"?`);
-        if (!ok) return;
-        try {
-            await restaurantRepository.remove(r.id);
-            setRestaurants((prev) => prev.filter((x) => x.id !== r.id));
-        } catch (err) {
-            console.error("Delete failed:", err);
-        }
+        if (!window.confirm(`Delete "${r.name}"?`)) return;
+        await restaurantRepository.remove(r.id);
+        setRestaurants((prev) => prev.filter((x) => x.id !== r.id));
     };
 
     const handleSave = async () => {
         const validationErrors = validate(editing);
-        if (Object.keys(validationErrors).length > 0) {
+        if (Object.keys(validationationErrors || {}).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
-        try {
-            if (editing?.id) {
-                const res = await restaurantRepository.edit(editing.id, editing);
-                setRestaurants((prev) =>
-                    prev.map((x) => (x.id === editing.id ? res.data : x))
-                );
-            } else {
-                const res = await restaurantRepository.add(editing);
-                setRestaurants((prev) => [...prev, res.data]);
-            }
-            setOpenDialog(false);
-        } catch (err) {
-            console.error("Save failed:", err);
+        if (editing?.id) {
+            const res = await restaurantRepository.edit(editing.id, editing);
+            setRestaurants((prev) =>
+                prev.map((x) => (x.id === editing.id ? res.data : x))
+            );
+        } else {
+            const res = await restaurantRepository.add(editing);
+            setRestaurants((prev) => [...prev, res.data]);
         }
+        setOpenDialog(false);
     };
 
-    // Function to check if restaurant is open based on openHours (supports overnight)
     const isRestaurantOpen = (r) => {
-        if (!r.openHours) return r.isOpen; // fallback
-
+        if (!r.openHours) return r.isOpen;
         try {
             const [start, end] = r.openHours.split("-").map((s) => s.trim());
-            if (!start || !end) return r.isOpen;
-
+            const [sh, sm] = start.split(":").map(Number);
+            const [eh, em] = end.split(":").map(Number);
             const now = new Date();
-            const [startH, startM] = start.split(":").map(Number);
-            const [endH, endM] = end.split(":").map(Number);
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            const startMin = sh * 60 + (sm || 0);
+            const endMin = eh * 60 + (em || 0);
 
-            const startMinutes = startH * 60 + (startM || 0);
-            const endMinutes = endH * 60 + (endM || 0);
-            const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-            if (startMinutes < endMinutes) {
-                // same-day hours
-                return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
-            } else {
-                // overnight hours (e.g., 22:00-02:00)
-                return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
-            }
-        } catch (e) {
-            console.error("Invalid openHours format:", r.openHours, e);
+            return startMin < endMin
+                ? nowMin >= startMin && nowMin <= endMin
+                : nowMin >= startMin || nowMin <= endMin;
+        } catch {
             return r.isOpen;
         }
     };
 
     return (
-        <Box>
-            {/* Toolbar: title, search, add */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    flexWrap: "wrap",
-                    mb: 3,
-                }}
-            >
+        <Box data-testid="admin-restaurants-page">
+            {/* Toolbar */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
                 <Typography variant="h4" sx={{ fontWeight: 800, mr: "auto" }}>
                     Restaurant Management
                 </Typography>
 
                 <TextField
+                    data-testid="admin-restaurants-search-input"
                     placeholder="Search restaurants…"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    sx={{
-                        width: { xs: "100%", sm: 320, md: 380 },
-                        background: "#fff",
-                        borderRadius: 2,
-                        "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                    }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -184,116 +150,100 @@ const AdminRestaurants = () => {
                     }}
                 />
             </Box>
+
             <Button
+                data-testid="admin-restaurants-add-btn"
                 onClick={onAdd}
                 variant="contained"
-                color="secondary"
                 startIcon={<AddIcon />}
-                sx={{ borderRadius: 2, fontWeight: 700, marginBottom: 3 }}
+                sx={{ mb: 3 }}
             >
                 Add Restaurant
             </Button>
 
             {/* Table */}
-            {loading ? (
-                <Typography>Loading…</Typography>
-            ) : (
-                <TableContainer
-                    component={Paper}
-                    elevation={0}
-                    sx={{
-                        border: "1px solid #E5E7EB",
-                        borderRadius: 2,
-                        overflow: "hidden",
-                    }}
-                >
-                    <Table sx={{ minWidth: 960 }}>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: "#F9FAFB" }}>
-                                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Open Hours</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Delivery Time</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Rating</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+            <TableContainer
+                data-testid="admin-restaurants-table"
+                component={Paper}
+            >
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Open Hours</TableCell>
+                            <TableCell>Delivery Time</TableCell>
+                            <TableCell>Rating</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filtered.map((r) => (
+                            <TableRow
+                                key={r.id}
+                                data-testid={`admin-restaurant-row-${r.id}`}
+                            >
+                                <TableCell>{r.name}</TableCell>
+                                <TableCell>{r.description}</TableCell>
+                                <TableCell>{r.openHours}</TableCell>
+                                <TableCell>{r.deliveryTimeEstimate} min</TableCell>
+                                <TableCell>{r.averageRating}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        data-testid={`admin-restaurant-status-${r.id}`}
+                                        label={isRestaurantOpen(r) ? "Open" : "Closed"}
+                                        color={isRestaurantOpen(r) ? "success" : "default"}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        data-testid={`admin-restaurant-edit-${r.id}`}
+                                        onClick={() => onEdit(r)}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        data-testid={`admin-restaurant-delete-${r.id}`}
+                                        onClick={() => onDelete(r)}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </TableCell>
                             </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filtered.map((r) => (
-                                <TableRow key={r.id} hover>
-                                    <TableCell sx={{ width: 260 }}>
-                                        <Typography sx={{ fontWeight: 600 }}>{r.name}</Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {r.description}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>{r.openHours}</TableCell>
-                                    <TableCell>{r.deliveryTimeEstimate ?? 30} min</TableCell>
-                                    <TableCell>{r.averageRating ?? 4.5}</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            size="small"
-                                            color={isRestaurantOpen(r) ? "success" : "default"}
-                                            label={isRestaurantOpen(r) ? "Open" : "Closed"}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton onClick={() => onEdit(r)} color="primary">
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => onDelete(r)} color="error">
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {!filtered.length && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center">
-                                        <Typography color="text.secondary">
-                                            No restaurants match your search.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-            {/* Add/Edit Dialog */}
+            {/* Dialog */}
             <Dialog
+                data-testid="admin-restaurant-dialog"
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
-                maxWidth="sm"
-                fullWidth
             >
                 <DialogTitle>
                     {editing?.id ? "Edit Restaurant" : "Add Restaurant"}
                 </DialogTitle>
-                <DialogContent sx={{ display: "grid", gap: 2, mt: 1 }}>
+                <DialogContent sx={{ display: "grid", gap: 2 }}>
                     <TextField
+                        data-testid="admin-restaurant-name-input"
                         label="Name"
                         value={editing?.name || ""}
-                        onChange={(e) =>
-                            setEditing({ ...editing, name: e.target.value })
-                        }
+                        onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                         error={!!errors.name}
                         helperText={errors.name}
                     />
                     <TextField
+                        data-testid="admin-restaurant-description-input"
                         label="Description"
                         value={editing?.description || ""}
                         onChange={(e) =>
                             setEditing({ ...editing, description: e.target.value })
                         }
-                        multiline
-                        rows={2}
                     />
                     <TextField
+                        data-testid="admin-restaurant-openhours-input"
                         label="Open hours"
                         value={editing?.openHours || ""}
                         onChange={(e) =>
@@ -301,6 +251,7 @@ const AdminRestaurants = () => {
                         }
                     />
                     <TextField
+                        data-testid="admin-restaurant-rating-input"
                         label="Average rating"
                         value={editing?.averageRating || ""}
                         onChange={(e) =>
@@ -308,6 +259,7 @@ const AdminRestaurants = () => {
                         }
                     />
                     <TextField
+                        data-testid="admin-restaurant-image-input"
                         label="Image URL"
                         value={editing?.imageUrl || ""}
                         onChange={(e) =>
@@ -315,6 +267,7 @@ const AdminRestaurants = () => {
                         }
                     />
                     <TextField
+                        data-testid="admin-restaurant-deliverytime-input"
                         label="Delivery Time (minutes)"
                         type="number"
                         value={editing?.deliveryTimeEstimate || ""}
@@ -329,6 +282,7 @@ const AdminRestaurants = () => {
                     />
                     <TextField
                         select
+                        data-testid="admin-restaurant-status-select"
                         label="Status"
                         value={editing?.isOpen ? "open" : "closed"}
                         onChange={(e) =>
@@ -343,8 +297,17 @@ const AdminRestaurants = () => {
                     </TextField>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSave}>
+                    <Button
+                        data-testid="admin-restaurant-cancel-btn"
+                        onClick={() => setOpenDialog(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="admin-restaurant-save-btn"
+                        variant="contained"
+                        onClick={handleSave}
+                    >
                         Save
                     </Button>
                 </DialogActions>

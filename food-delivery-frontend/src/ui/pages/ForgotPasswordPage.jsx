@@ -1,13 +1,30 @@
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, Avatar, Link, Snackbar, Alert } from "@mui/material";
+import {
+    Box,
+    Button,
+    TextField,
+    Typography,
+    Avatar,
+    Link,
+    Snackbar,
+    Alert
+} from "@mui/material";
 import { LocalDining } from "@mui/icons-material";
 import { useNavigate } from "react-router";
 import userRepository from "../../repository/userRepository.js";
 import AuthLayout from "../components/Auth/AuthLayout.jsx";
 
 const ForgotPasswordPage = () => {
-    const [form, setForm] = useState({ username: "", password: "", repeatPassword: "" });
-    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+    const [form, setForm] = useState({
+        username: "",
+        password: "",
+        repeatPassword: ""
+    });
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success"
+    });
     const navigate = useNavigate();
 
     const submit = async (e) => {
@@ -25,14 +42,20 @@ const ForgotPasswordPage = () => {
 
         try {
             await userRepository.changePassword(form.username, form.password);
-            setSnackbar({ open: true, message: "Password changed successfully!", severity: "success" });
+            setSnackbar({
+                open: true,
+                message: "Password changed successfully!",
+                severity: "success"
+            });
 
-            // Optional: redirect after 2 seconds
             setTimeout(() => {
                 navigate("/login", { replace: true });
             }, 2000);
         } catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Password change failed.";
+            const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Password change failed.";
             setSnackbar({ open: true, message: msg, severity: "error" });
         }
     };
@@ -40,6 +63,7 @@ const ForgotPasswordPage = () => {
     return (
         <AuthLayout>
             <Box
+                data-testid="forgot-page"
                 component="form"
                 onSubmit={submit}
                 sx={{
@@ -53,7 +77,10 @@ const ForgotPasswordPage = () => {
                 }}
             >
                 {/* Brand */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <Box
+                    data-testid="forgot-brand"
+                    sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+                >
                     <Avatar sx={{ bgcolor: "#f97316", width: 32, height: 32 }}>
                         <LocalDining fontSize="small" />
                     </Avatar>
@@ -62,70 +89,79 @@ const ForgotPasswordPage = () => {
                     </Typography>
                 </Box>
 
-                {/* Titles */}
-                <Typography variant="h5" className="auth-title">Change Password</Typography>
-                <Typography className="auth-subtitle" sx={{ mb: 1 }}>
+                <Typography variant="h5">Change Password</Typography>
+                <Typography sx={{ mb: 1, color: "text.secondary" }}>
                     Enter your username and new password
                 </Typography>
 
-                {/* Form fields */}
                 <TextField
+                    data-testid="forgot-username-input"
                     label="Username"
                     fullWidth
                     size="small"
                     margin="dense"
                     value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    onChange={(e) =>
+                        setForm({ ...form, username: e.target.value })
+                    }
                     required
                 />
                 <TextField
+                    data-testid="forgot-password-input"
                     label="New Password"
                     type="password"
                     fullWidth
                     size="small"
                     margin="dense"
                     value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onChange={(e) =>
+                        setForm({ ...form, password: e.target.value })
+                    }
                     required
                 />
                 <TextField
+                    data-testid="forgot-repeat-input"
                     label="Repeat Password"
                     type="password"
                     fullWidth
                     size="small"
                     margin="dense"
                     value={form.repeatPassword}
-                    onChange={(e) => setForm({ ...form, repeatPassword: e.target.value })}
+                    onChange={(e) =>
+                        setForm({ ...form, repeatPassword: e.target.value })
+                    }
                     required
                 />
 
-                {/* Submit */}
                 <Button
+                    data-testid="forgot-submit-btn"
                     type="submit"
                     variant="contained"
-                    sx={{ mt: 1, width: "100%", fontWeight: 600 }}
+                    sx={{ mt: 1, width: "100%" }}
                 >
                     Change Password
                 </Button>
 
-                {/* Sign in link */}
-                <Box sx={{ fontSize: "0.85rem", textAlign: "center", mt: 1, fontWeight: 600 }} className="auth-footer">
+                <Box sx={{ textAlign: "center", mt: 1 }}>
                     <span>Remembered your password? </span>
-                    <Link component="button" onClick={() => navigate("/login")}>
+                    <Link
+                        data-testid="forgot-login-link"
+                        component="button"
+                        onClick={() => navigate("/login")}
+                    >
                         Sign in
                     </Link>
                 </Box>
             </Box>
 
-            {/* Snackbar for messages */}
             <Snackbar
+                data-testid="forgot-snackbar"
                 open={snackbar.open}
                 autoHideDuration={3000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
             >
                 <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
                     severity={snackbar.severity}
                     sx={{ width: "100%" }}
                 >

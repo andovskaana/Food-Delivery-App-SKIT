@@ -1,5 +1,11 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Box,
+    Button
+} from "@mui/material";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
@@ -13,7 +19,7 @@ const Header = () => {
     const location = useLocation();
 
     // Hide header on auth pages
-    const hideHeader = /^\/(login|register)(\/|$)/.test(location.pathname);
+    const hideHeader = /^\/(login|register|forgot-password)(\/|$)/.test(location.pathname);
     if (hideHeader) return null;
 
     const getDashboardLink = () => {
@@ -21,7 +27,13 @@ const Header = () => {
 
         if (user.roles?.includes('ADMIN')) {
             return (
-                <Button color="inherit" startIcon={<AdminPanelSettingsIcon/>} component={Link} to="/admin">
+                <Button
+                    data-testid="header-admin-link"
+                    color="inherit"
+                    startIcon={<AdminPanelSettingsIcon />}
+                    component={Link}
+                    to="/admin"
+                >
                     Admin Panel
                 </Button>
             );
@@ -29,7 +41,13 @@ const Header = () => {
 
         if (user.roles?.includes('COURIER')) {
             return (
-                <Button color="inherit" startIcon={<DeliveryDiningIcon/>} component={Link} to="/courier">
+                <Button
+                    data-testid="header-courier-link"
+                    color="inherit"
+                    startIcon={<DeliveryDiningIcon />}
+                    component={Link}
+                    to="/courier"
+                >
                     Courier Dashboard
                 </Button>
             );
@@ -39,11 +57,16 @@ const Header = () => {
     };
 
     return (
-        <AppBar position="static" color="primary">
+        <AppBar
+            data-testid="header"
+            position="static"
+            color="primary"
+        >
             <Toolbar sx={{ display: 'flex', gap: 2 }}>
-                <RestaurantIcon/>
+                <RestaurantIcon />
 
                 <Typography
+                    data-testid="header-brand"
                     variant="h6"
                     sx={{ flexGrow: 1 }}
                     component={Link}
@@ -55,12 +78,23 @@ const Header = () => {
 
                 {user?.roles?.includes('CUSTOMER') && (
                     <>
-                    <Button color="inherit" startIcon={<ShoppingCartIcon/>} component={Link} to="/cart">
-                        Cart
-                    </Button>
-                    <Button color="inherit" component={Link} to="/orders/my-orders">
-                        My Orders
-                    </Button>
+                        <Button
+                            data-testid="header-cart-link"
+                            color="inherit"
+                            startIcon={<ShoppingCartIcon />}
+                            component={Link}
+                            to="/cart"
+                        >
+                            Cart
+                        </Button>
+                        <Button
+                            data-testid="header-orders-link"
+                            color="inherit"
+                            component={Link}
+                            to="/orders/my-orders"
+                        >
+                            My Orders
+                        </Button>
                     </>
                 )}
 
@@ -69,6 +103,7 @@ const Header = () => {
                 {user ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Button
+                            data-testid="header-profile-btn"
                             color="inherit"
                             onClick={() => navigate(`/user/me`)}
                             sx={{ textTransform: 'none' }}
@@ -76,6 +111,7 @@ const Header = () => {
                             Hello, {user.username}
                         </Button>
                         <Button
+                            data-testid="header-logout-btn"
                             color="inherit"
                             onClick={() => {
                                 logout();
@@ -87,8 +123,22 @@ const Header = () => {
                     </Box>
                 ) : (
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button color="inherit" component={Link} to="/login">Login</Button>
-                        <Button color="inherit" component={Link} to="/register">Register</Button>
+                        <Button
+                            data-testid="header-login-link"
+                            color="inherit"
+                            component={Link}
+                            to="/login"
+                        >
+                            Login
+                        </Button>
+                        <Button
+                            data-testid="header-register-link"
+                            color="inherit"
+                            component={Link}
+                            to="/register"
+                        >
+                            Register
+                        </Button>
                     </Box>
                 )}
             </Toolbar>

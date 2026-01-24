@@ -6,6 +6,7 @@ const Alert = ({ open, onClose, message }) => {
 
     return (
         <Box
+            data-testid="global-alert"
             sx={{
                 position: "fixed",
                 top: 0,

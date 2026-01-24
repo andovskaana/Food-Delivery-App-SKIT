@@ -34,7 +34,6 @@ const AdminProducts = () => {
     const [q, setQ] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // Dialog state
     const [openDialog, setOpenDialog] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [errors, setErrors] = useState({});
@@ -50,7 +49,6 @@ const AdminProducts = () => {
                 setProducts(p?.data || []);
                 setRestaurants(r?.data || []);
             })
-            .catch((err) => console.error("Load failed", err))
             .finally(() => live && setLoading(false));
         return () => {
             live = false;
@@ -97,111 +95,57 @@ const AdminProducts = () => {
     };
 
     const onDelete = async (p) => {
-        const ok = window.confirm(`Delete "${p.name}"?`);
-        if (!ok) return;
-        try {
-            await productRepository.remove(p.id);
-            setProducts((prev) => prev.filter((x) => x.id !== p.id));
-        } catch (err) {
-            console.error("Delete failed:", err);
-        }
-    };
-
-    const validate = (product) => {
-        const newErrors = {};
-        if (!product.name?.trim()) newErrors.name = "Name is required";
-        if (!product.price || Number(product.price) <= 0)
-            newErrors.price = "Price must be greater than 0";
-        if (product.quantity === "" || Number(product.quantity) < 0)
-            newErrors.quantity = "Quantity cannot be negative";
-        if (!product.restaurantId)
-            newErrors.restaurantId = "Restaurant is required";
-        return newErrors;
+        if (!window.confirm(`Delete "${p.name}"?`)) return;
+        await productRepository.remove(p.id);
+        setProducts((prev) => prev.filter((x) => x.id !== p.id));
     };
 
     const handleSave = async () => {
-        const validationErrors = validate(editingProduct);
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
+        const errs = {};
+        if (!editingProduct.name) errs.name = "Name required";
+        if (!editingProduct.restaurantId) errs.restaurantId = "Restaurant required";
+        if (Object.keys(errs).length) return setErrors(errs);
 
-        try {
-            if (editingProduct?.id) {
-                const res = await productRepository.edit(
-                    editingProduct.id,
-                    editingProduct
-                );
-                setProducts((prev) =>
-                    prev.map((x) =>
-                        x.id === editingProduct.id ? res.data : x
-                    )
-                );
-            } else {
-                const res = await productRepository.add(editingProduct);
-                setProducts((prev) => [...prev, res.data]);
-            }
-            setOpenDialog(false);
-        } catch (err) {
-            console.error("Save failed:", err);
+        if (editingProduct.id) {
+            const res = await productRepository.edit(editingProduct.id, editingProduct);
+            setProducts((prev) =>
+                prev.map((p) => (p.id === editingProduct.id ? res.data : p))
+            );
+        } else {
+            const res = await productRepository.add(editingProduct);
+            setProducts((prev) => [...prev, res.data]);
         }
+        setOpenDialog(false);
     };
 
     return (
-        <Box>
-            {/* Toolbar: title, filter, search, add */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    flexWrap: "wrap",
-                    mb: 3,
-                }}
-            >
-                <Typography variant="h4" sx={{ fontWeight: 800, mr: "auto" }}>
+        <Box data-testid="admin-products-page">
+            {/* Toolbar */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+                <Typography variant="h4" sx={{ mr: "auto", fontWeight: 800 }}>
                     Product Management
                 </Typography>
 
-                <Box sx={{ display: "grid", gap: 1 }}>
-                    <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                        Filter by Restaurant
-                    </Typography>
-                    <TextField
-                        select
-                        value={restaurantId}
-                        onChange={(e) => setRestaurantId(e.target.value)}
-                        placeholder="All restaurants"
-                        sx={{
-                            minWidth: { xs: "100%", sm: 260 },
-                            background: "#fff",
-                            borderRadius: 2,
-                            "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                        }}
-                    >
-                        <MenuItem value="">All restaurants</MenuItem>
-                        {restaurants.map((r) => (
-                            <MenuItem key={r.id} value={r.id}>
-                                {r.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                </Box>
+                <TextField
+                    select
+                    data-testid="admin-products-restaurant-filter"
+                    value={restaurantId}
+                    onChange={(e) => setRestaurantId(e.target.value)}
+                    sx={{ minWidth: 240 }}
+                >
+                    <MenuItem value="">All restaurants</MenuItem>
+                    {restaurants.map((r) => (
+                        <MenuItem key={r.id} value={r.id}>
+                            {r.name}
+                        </MenuItem>
+                    ))}
+                </TextField>
 
                 <TextField
+                    data-testid="admin-products-search-input"
                     placeholder="Search products…"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    sx={{
-                        width: { xs: "100%", sm: 320, md: 380 },
-                        background: "#fff",
-                        borderRadius: 2,
-                        marginTop: 3.5,
-                        "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                    }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -212,174 +156,116 @@ const AdminProducts = () => {
                 />
 
                 <Button
-                    onClick={onAdd}
+                    data-testid="admin-products-add-btn"
                     variant="contained"
-                    color="secondary"
                     startIcon={<AddIcon />}
-                    sx={{ borderRadius: 2, fontWeight: 700 }}
+                    onClick={onAdd}
                 >
                     Add Product
                 </Button>
             </Box>
 
             {/* Table */}
-            {loading ? (
-                <Typography>Loading…</Typography>
-            ) : (
-                <TableContainer
-                    component={Paper}
-                    elevation={0}
-                    sx={{
-                        border: "1px solid #E5E7EB",
-                        borderRadius: 2,
-                        overflow: "hidden",
-                    }}
-                >
-                    <Table sx={{ minWidth: 960 }}>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: "#F9FAFB" }}>
-                                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Restaurant</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Quantity</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Available</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+            <TableContainer
+                data-testid="admin-products-table"
+                component={Paper}
+            >
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Restaurant</TableCell>
+                            <TableCell>Category</TableCell>
+                            <TableCell>Price</TableCell>
+                            <TableCell>Quantity</TableCell>
+                            <TableCell>Available</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filtered.map((p) => (
+                            <TableRow
+                                key={p.id}
+                                data-testid={`admin-product-row-${p.id}`}
+                            >
+                                <TableCell>{p.name}</TableCell>
+                                <TableCell>
+                                    {restaurants.find(r => r.id === p.restaurantId)?.name}
+                                </TableCell>
+                                <TableCell>{p.category}</TableCell>
+                                <TableCell>{p.price}</TableCell>
+                                <TableCell>{p.quantity}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        data-testid={`admin-product-available-${p.id}`}
+                                        label={p.isAvailable ? "Yes" : "No"}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        data-testid={`admin-product-edit-${p.id}`}
+                                        onClick={() => onEdit(p)}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        data-testid={`admin-product-delete-${p.id}`}
+                                        onClick={() => onDelete(p)}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </TableCell>
                             </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filtered.map((p) => (
-                                <TableRow key={p.id} hover>
-                                    <TableCell sx={{ width: 320 }}>
-                                        <Box sx={{ display: "grid" }}>
-                                            <Typography sx={{ fontWeight: 600 }}>{p.name}</Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {p.description}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        {
-                                            restaurants.find(
-                                                (r) => String(r.id) === String(p.restaurantId)
-                                            )?.name
-                                        }
-                                    </TableCell>
-                                    <TableCell sx={{ width: 200 }}>{p.category}</TableCell>
-                                    <TableCell sx={{ width: 150 }}>{Number(p.price ?? 0).toFixed(2)} ден.</TableCell>
-                                    <TableCell>{p.quantity ?? 0}</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            size="small"
-                                            color={p.isAvailable ? "success" : "default"}
-                                            label={p.isAvailable ? "Yes" : "No"}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton onClick={() => onEdit(p)} color="primary">
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => onDelete(p)} color="error">
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {!filtered.length && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center">
-                                        <Typography color="text.secondary">
-                                            No products match your filters.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-            {/* Add/Edit Dialog */}
+            {/* Dialog */}
             <Dialog
+                data-testid="admin-product-dialog"
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
-                maxWidth="sm"
-                fullWidth
             >
                 <DialogTitle>
                     {editingProduct?.id ? "Edit Product" : "Add Product"}
                 </DialogTitle>
-                <DialogContent sx={{ display: "grid", gap: 2, mt: 1 }}>
+                <DialogContent sx={{ display: "grid", gap: 2 }}>
                     <TextField
+                        data-testid="admin-product-name-input"
                         label="Name"
                         value={editingProduct?.name || ""}
                         onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                name: e.target.value,
-                            })
+                            setEditingProduct({ ...editingProduct, name: e.target.value })
                         }
                         error={!!errors.name}
                         helperText={errors.name}
                     />
                     <TextField
+                        data-testid="admin-product-description-input"
                         label="Description"
                         value={editingProduct?.description || ""}
                         onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                description: e.target.value,
-                            })
+                            setEditingProduct({ ...editingProduct, description: e.target.value })
                         }
                     />
                     <TextField
-                        label="Category"
-                        value={editingProduct?.category || ""}
-                        onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                category: e.target.value,
-                            })
-                        }
-                    />
-                    <TextField
+                        data-testid="admin-product-price-input"
                         label="Price"
                         type="number"
                         value={editingProduct?.price || ""}
                         onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                price: e.target.value,
-                            })
+                            setEditingProduct({ ...editingProduct, price: e.target.value })
                         }
-                        error={!!errors.price}
-                        helperText={errors.price}
-                    />
-                    <TextField
-                        label="Quantity"
-                        type="number"
-                        value={editingProduct?.quantity || ""}
-                        onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                quantity: e.target.value,
-                            })
-                        }
-                        error={!!errors.quantity}
-                        helperText={errors.quantity}
                     />
                     <TextField
                         select
+                        data-testid="admin-product-restaurant-select"
                         label="Restaurant"
                         value={editingProduct?.restaurantId || ""}
                         onChange={(e) =>
-                            setEditingProduct({
-                                ...editingProduct,
-                                restaurantId: e.target.value,
-                            })
+                            setEditingProduct({ ...editingProduct, restaurantId: e.target.value })
                         }
-                        error={!!errors.restaurantId}
-                        helperText={errors.restaurantId}
                     >
                         {restaurants.map((r) => (
                             <MenuItem key={r.id} value={r.id}>
@@ -389,8 +275,14 @@ const AdminProducts = () => {
                     </TextField>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSave}>
+                    <Button data-testid="admin-product-cancel-btn" onClick={() => setOpenDialog(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        data-testid="admin-product-save-btn"
+                        variant="contained"
+                        onClick={handleSave}
+                    >
                         Save
                     </Button>
                 </DialogActions>

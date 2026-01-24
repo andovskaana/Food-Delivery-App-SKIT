@@ -26,10 +26,9 @@ import ReviewForm from "../../components/reviews/ReviewForm/ReviewForm.jsx";
 import useAuth from "../../../hooks/useAuth.js";
 import Alert from "../../../common/Alert.jsx";
 
-/** Helpers */
+/* helpers */
 const mkd = (n) => `${Number(n || 0).toFixed(0)} ден`;
 
-/** Opening-hours: daily string only (e.g. "09:00-22:00" or "09:00-12:00, 13:00-18:00", supports "22:00-02:00") */
 const timeToMinutes = (hhmm) => {
     const [h, m] = (hhmm || "").split(":").map(Number);
     return (h || 0) * 60 + (m || 0);
@@ -50,23 +49,21 @@ const parseIntervals = (value) => {
 };
 
 const isOpenAt = (nowMin, intervals) => {
-    // supports overnight: e.g. 22:00-02:00
     for (const { start, end } of intervals) {
-        if (start === end) continue; // ignore zero-length ranges
+        if (start === end) continue;
         if (start < end) {
             if (nowMin >= start && nowMin < end) return true;
         } else {
-            // overnight crosses midnight
             if (nowMin >= start || nowMin < end) return true;
         }
     }
     return false;
 };
 
+/* Product row */
 const KorpaRowCard = ({ product, onAdd }) => {
     const { user } = useAuth();
 
-    // Derive discount/old/new price
     const basePrice = Number(product.price || 0);
     const oldPrice = product.oldPrice ? Number(product.oldPrice) : null;
     const discountPct = product.discountPercent ?? product.discount ?? null;
@@ -81,6 +78,7 @@ const KorpaRowCard = ({ product, onAdd }) => {
 
     return (
         <Card
+            data-testid={`restaurant-product-${product.id}`}
             variant="outlined"
             sx={{
                 mb: 2,
@@ -88,21 +86,9 @@ const KorpaRowCard = ({ product, onAdd }) => {
                 overflow: "hidden",
                 minHeight: 128,
                 display: "flex",
-                alignItems: "stretch",
             }}
         >
-            {/* Left image (fixed size) */}
-            <Box
-                sx={{
-                    width: 160,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: "background.default",
-                    borderRight: "1px solid",
-                    borderColor: "divider",
-                }}
-            >
+            <Box sx={{ width: 160, borderRight: "1px solid", borderColor: "divider" }}>
                 <CardMedia
                     component="img"
                     alt={product.name}
@@ -110,115 +96,55 @@ const KorpaRowCard = ({ product, onAdd }) => {
                         product.imageUrl ||
                         "https://via.placeholder.com/300x200?text=Food"
                     }
-                    sx={{
-                        width: 140,
-                        height: 100,
-                        objectFit: "cover",
-                        borderRadius: 1,
-                    }}
+                    sx={{ width: 140, height: 100, objectFit: "cover", m: 1 }}
                 />
             </Box>
 
-            {/* Middle content */}
-            <CardContent
-                sx={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    py: 2,
-                }}
-            >
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+            <CardContent sx={{ flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {product.name}
                 </Typography>
-
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        maxWidth: { xs: "100%", md: "90%" },
-                    }}
-                >
+                <Typography variant="body2" color="text.secondary">
                     {product.description}
                 </Typography>
 
-                <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
                     {hasDiscount && (
-                        <Chip
-                            size="small"
-                            label="АКЦИЈА"
-                            color="warning"
-                            sx={{ fontWeight: 600 }}
-                        />
+                        <Chip size="small" label="АКЦИЈА" color="warning" />
                     )}
                     {!!product.category && (
-                        <Chip size="small" label={product.category} variant="outlined" />
+                        <Chip size="small" label={product.category} />
                     )}
                 </Box>
             </CardContent>
 
-            {/* Right price + add button (fixed width) */}
             <Box
                 sx={{
-                    width: { xs: 150, sm: 220 },
-                    px: 2,
-                    py: 2,
+                    width: 220,
+                    p: 2,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    gap: 1.25,
+                    gap: 1,
                     borderLeft: "1px solid",
                     borderColor: "divider",
                 }}
             >
-                {/* Prices */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        gap: 1,
-                        flexWrap: "wrap",
-                    }}
-                >
-                    {hasDiscount && (
-                        <Typography
-                            variant="body1"
-                            color="text.disabled"
-                            sx={{ textDecoration: "line-through" }}
-                        >
-                            {mkd(oldPrice ?? basePrice)}
-                        </Typography>
-                    )}
-                    <Typography
-                        variant="h6"
-                        sx={{ color: "success.main", fontWeight: 700 }}
-                    >
-                        {mkd(newPrice)}
-                    </Typography>
-                </Box>
+                <Typography variant="h6" sx={{ color: "success.main", fontWeight: 700 }}>
+                    {mkd(newPrice)}
+                </Typography>
 
-                {/* Add button */}
-                {user?.roles?.includes("CUSTOMER") ? (
+                {user?.roles?.includes("CUSTOMER") && (
                     <Button
+                        data-testid={`restaurant-add-btn-${product.id}`}
                         variant="outlined"
-                        onClick={() => onAdd?.(product.id)}
-                        disabled={!product.isAvailable || product.quantity <= 0}
                         startIcon={<AddIcon />}
-                        sx={{
-                            borderRadius: 999,
-                            fontWeight: 600,
-                            textTransform: "none",
-                        }}
+                        onClick={() => onAdd(product.id)}
+                        disabled={!product.isAvailable || product.quantity <= 0}
+                        sx={{ borderRadius: 999 }}
                     >
                         {product.quantity <= 0 ? "Нема залиха" : "Додади"}
                     </Button>
-                ) : (
-                    <Box sx={{ height: 36 }} />
                 )}
             </Box>
         </Card>
@@ -232,43 +158,26 @@ const RestaurantPage = () => {
     const [products, setProducts] = useState([]);
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // Derived open/closed
     const [isOpenNow, setIsOpenNow] = useState(false);
-
-    // Dialog state for closed-restaurant message
     const [closedDialogOpen, setClosedDialogOpen] = useState(false);
 
-    // Category refs
     const categoryRefs = useRef({});
-    const [activeCat, setActiveCat] = useState("");
-
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
 
     useEffect(() => {
-        let active = true;
         Promise.all([
             restaurantRepository.findById(id),
             productRepository.findAll(),
             reviewRepository.list(id),
         ])
             .then(([r, p, rv]) => {
-                if (!active) return;
                 setRestaurant(r.data);
-                setProducts(
-                    p.data.filter((x) => String(x.restaurantId) === String(id))
-                );
+                setProducts(p.data.filter((x) => String(x.restaurantId) === String(id)));
                 setReviews(rv.data);
                 setLoading(false);
             })
-            .catch((err) => {
-                // console.error("Error loading restaurant data:", err);
-                setLoading(false);
-            });
-        return () => {
-            active = false;
-        };
+            .catch(() => setLoading(false));
     }, [id]);
 
     const intervals = useMemo(() => {
@@ -277,14 +186,14 @@ const RestaurantPage = () => {
     }, [restaurant?.openHours]);
 
     useEffect(() => {
-        const compute = () => {
+        const tick = () => {
             const now = new Date();
             const nowMin = now.getHours() * 60 + now.getMinutes();
             setIsOpenNow(isOpenAt(nowMin, intervals));
         };
-        compute();
-        const timer = setInterval(compute, 60 * 1000);
-        return () => clearInterval(timer);
+        tick();
+        const t = setInterval(tick, 60000);
+        return () => clearInterval(t);
     }, [intervals]);
 
     const handleAdd = async (productId) => {
@@ -317,126 +226,62 @@ const RestaurantPage = () => {
         }
     };
 
-    const grouped = useMemo(() => {
-        return products.reduce((acc, p) => {
-            const cat = p.category?.trim() || "Other";
-            (acc[cat] ||= []).push(p);
-            return acc;
-        }, {});
-    }, [products]);
-
-    const categories = Object.keys(grouped);
-
-    const scrollToCategory = (cat) => {
-        const el = categoryRefs.current[cat];
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    };
-
     if (loading) return <Typography>Loading...</Typography>;
     if (!restaurant) return <Typography>Restaurant not found.</Typography>;
 
+    const grouped = products.reduce((acc, p) => {
+        const cat = p.category?.trim() || "Other";
+        (acc[cat] ||= []).push(p);
+        return acc;
+    }, {});
+
+    const categories = Object.keys(grouped);
+
     return (
-        <Box>
-            {/* Restaurant Header */}
-            <Card sx={{ mb: 3, borderRadius: 2 }}>
+        <Box data-testid="restaurant-page">
+            {/* Header */}
+            <Card data-testid="restaurant-header" sx={{ mb: 3 }}>
                 <CardMedia
                     component="img"
                     height="300"
-                    image={
-                        restaurant.imageUrl ||
-                        "https://via.placeholder.com/800x300?text=Restaurant"
-                    }
+                    image={restaurant.imageUrl}
                     alt={restaurant.name}
                 />
                 <CardContent>
-                    <Typography variant="h3" gutterBottom>
-                        {restaurant.name}
-                    </Typography>
+                    <Typography variant="h3">{restaurant.name}</Typography>
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <StarIcon sx={{ color: "#ffc107" }} />
-                            <Typography variant="h6">{restaurant.averageRating || 4.5}</Typography>
-                        </Box>
-
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <AccessTimeIcon />
-                            <Typography>
-                                {restaurant.deliveryTimeEstimate || 30} min delivery
-                            </Typography>
-                        </Box>
-
+                    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                         <Chip
+                            data-testid="restaurant-status"
                             label={isOpenNow ? "Open" : "Closed"}
                             color={isOpenNow ? "success" : "error"}
                         />
+                        <Chip
+                            icon={<AccessTimeIcon />}
+                            label={`${restaurant.deliveryTimeEstimate || 30} min`}
+                        />
                     </Box>
 
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                        {restaurant.description}
-                    </Typography>
-
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Opening Hours
-                        </Typography>
-                        <Typography>{restaurant.openHours || "09:00-22:00"}</Typography>
-                    </Box>
-
-                    {restaurant.address && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <LocationOnIcon color="action" />
-                            <Typography color="text.secondary">
-                                {restaurant.address.line1}, {restaurant.address.city}
-                            </Typography>
-                        </Box>
-                    )}
+                    <Typography>{restaurant.description}</Typography>
                 </CardContent>
             </Card>
 
-            {/* Category navigation */}
-            {!!categories.length && (
-                <Box
-                    sx={{
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                        py: 1,
-                        mb: 2,
-                        bgcolor: "background.paper",
-                        borderBottom: "1px solid",
-                        borderColor: "divider",
-                    }}
-                >
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexWrap: "nowrap",
-                            overflowX: "auto",
-                            gap: 1,
-                            px: 0.5,
-                            "::-webkit-scrollbar": { display: "none" },
-                            scrollbarWidth: "none",
-                        }}
-                    >
-                        {categories.map((cat) => (
-                            <Chip
-                                key={cat}
-                                label={cat}
-                                clickable
-                                onClick={() => scrollToCategory(cat)}
-                                variant={activeCat === cat ? "filled" : "outlined"}
-                                color={activeCat === cat ? "primary" : "default"}
-                                sx={{ flexShrink: 0 }}
-                            />
-                        ))}
-                    </Box>
-                </Box>
-            )}
+            {/* Categories */}
+            <Box sx={{ display: "flex", gap: 1, mb: 2, overflowX: "auto" }}>
+                {categories.map((cat) => (
+                    <Chip
+                        key={cat}
+                        data-testid={`restaurant-category-${cat}`}
+                        label={cat}
+                        clickable
+                        onClick={() =>
+                            categoryRefs.current[cat]?.scrollIntoView({ behavior: "smooth" })
+                        }
+                    />
+                ))}
+            </Box>
 
-            {/* Menu Section */}
+            {/* Menu */}
             <Typography variant="h4" sx={{ mb: 2 }}>
                 Мени
             </Typography>
@@ -444,90 +289,60 @@ const RestaurantPage = () => {
             {categories.map((cat) => (
                 <Box
                     key={cat}
+                    data-testid={`restaurant-menu-section-${cat}`}
                     ref={(el) => (categoryRefs.current[cat] = el)}
-                    data-cat={cat}
-                    sx={{ mb: 4, scrollMarginTop: 88 }}
+                    sx={{ mb: 4 }}
                 >
                     <Typography variant="h5" sx={{ mb: 2 }}>
                         {cat}
                     </Typography>
-
-                    <Box>
-                        {grouped[cat].map((product) => (
-                            <KorpaRowCard
-                                key={product.id}
-                                product={product}
-                                onAdd={handleAdd}
-                            />
-                        ))}
-                    </Box>
+                    {grouped[cat].map((p) => (
+                        <KorpaRowCard key={p.id} product={p} onAdd={handleAdd} />
+                    ))}
                 </Box>
             ))}
 
-            {products.length === 0 && (
-                <Typography color="text.secondary" sx={{ textAlign: "center", mb: 4 }}>
-                    No menu items available.
-                </Typography>
-            )}
-
             <Divider sx={{ my: 4 }} />
 
-            {/* Reviews Section */}
-            <Typography variant="h4" sx={{ mb: 2 }}>
-                Reviews
-            </Typography>
+            {/* Reviews */}
+            <Box data-testid="restaurant-reviews">
+                <Typography variant="h4" sx={{ mb: 2 }}>
+                    Reviews
+                </Typography>
 
-            {user?.roles?.includes("CUSTOMER") && (
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            Write a Review
-                        </Typography>
-                        <ReviewForm onSubmit={handleReview} />
-                    </CardContent>
-                </Card>
-            )}
-
-            {reviews.length > 0 ? (
-                reviews.map((r) => (
-                    <Card key={r.id} sx={{ mb: 2 }}>
+                {user?.roles?.includes("CUSTOMER") && (
+                    <Card sx={{ mb: 3 }}>
                         <CardContent>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                                {r.userUsername || "Anonymous"}
-                            </Typography>
-
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                    <StarIcon
-                                        key={i}
-                                        sx={{ color: i < r.averageRating ? "#ffc107" : "#e0e0e0" }}
-                                    />
-                                ))}
-                            </Box>
-
-                            <Typography variant="body2">{r.comment}</Typography>
+                            <ReviewForm
+                                data-testid="restaurant-review-form"
+                                onSubmit={handleReview}
+                            />
                         </CardContent>
                     </Card>
-                ))
-            ) : (
-                <Typography color="text.secondary">No reviews yet.</Typography>
-            )}
+                )}
+            </Box>
 
-            {/* Closed restaurant dialog */}
+            {/* Closed dialog */}
             <Dialog
+                data-testid="restaurant-closed-dialog"
                 open={closedDialogOpen}
                 onClose={() => setClosedDialogOpen(false)}
             >
                 <DialogTitle>Cannot order</DialogTitle>
                 <DialogContent>
-                    The restaurant is currently closed. Please try again during
-                    opening hours.
+                    The restaurant is currently closed.
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setClosedDialogOpen(false)}>OK</Button>
                 </DialogActions>
             </Dialog>
-            <Alert open={alertOpen} onClose={() => setAlertOpen(false)} message={alertMessage} />
+
+            <Alert
+                data-testid="restaurant-alert"
+                open={alertOpen}
+                onClose={() => setAlertOpen(false)}
+                message={alertMessage}
+            />
         </Box>
     );
 };
