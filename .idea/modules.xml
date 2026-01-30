@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Food-Delivery-App-SKIT.iml" filepath="$PROJECT_DIR$/.idea/Food-Delivery-App-SKIT.iml" />
+      <module fileurl="file://$PROJECT_DIR$/food-delivery-e2e-api-tests/food-delivery-e2e-api-tests.iml" filepath="$PROJECT_DIR$/food-delivery-e2e-api-tests/food-delivery-e2e-api-tests.iml" />
     </modules>
   </component>
 </project>

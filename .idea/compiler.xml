@@ -22,7 +22,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="food-delivery-e2e-api-tests" options="-parameters" />
+      <module name="food-delivery-e2e-api-tests" options="" />
       <module name="food_delivery" options="-parameters" />
     </option>
   </component>
