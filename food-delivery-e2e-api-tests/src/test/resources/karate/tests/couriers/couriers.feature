@@ -37,25 +37,8 @@ Feature: Couriers CRUD and operations (id-safe)
     * header Authorization = 'Bearer ' + adminToken
     Given path '/api/couriers', cid
     When method get
-    Then status 403
+    Then status 200
     And match response contains { id: '#(cid)', name: '#string', active: '#boolean' }
-
-
-    #
-#    # ===== EDIT  =====
-#    * header Authorization = 'Bearer ' + adminToken
-#    Given path '/api/couriers/edit', cid
-#    And request
-#    """
-#    {
-#      "name": "NewEditedName",
-#      "phone": "001",
-#      "active": true
-#    }
-#    """
-#    When method put
-#    Then status 200
-#    And match response contains { id: #(cid), name: 'Edited Courier', active: true }
 
     # ===== PREP A CONFIRMED ORDER (customer flow) =====
     * header Authorization = 'Bearer ' + customerToken
@@ -64,14 +47,8 @@ Feature: Couriers CRUD and operations (id-safe)
     Then status 200
     * def pendingId = response.id
 
-    * header Authorization = null
-    Given path '/api/products'
-    When method get
-    Then status 200
-    * def pid = response.length > 0 ? response[0].id : 1
-
     * header Authorization = 'Bearer ' + customerToken
-    Given path '/api/products/add-to-order', pid
+    Given path '/api/products/add-to-order/', pendingId
     When method post
     Then status 200
 

@@ -15,9 +15,12 @@ module.exports = defineConfig({
     // vite dev server (vite defaults to 5173).  Tests assume the backend
     // is running on localhost:8080 and that CORS has been configured.
     baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    trace: 'on-first-retry',
     headless: true,
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
     video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
+
 });

@@ -16,11 +16,6 @@ public class KarateRunner {
     private static final String THREAD_COUNT = "threadCount";
 
     @Karate.Test
-    Karate runAuthOnly() {
-        return Karate.run("classpath:karate/tests/couriers/couriers.feature");
-    }
-
-    @Karate.Test
     Karate runAll() {
         return Karate.run("classpath:karate/tests");
     }

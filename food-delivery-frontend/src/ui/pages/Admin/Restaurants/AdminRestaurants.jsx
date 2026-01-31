@@ -92,7 +92,7 @@ const AdminRestaurants = () => {
 
     const handleSave = async () => {
         const validationErrors = validate(editing);
-        if (Object.keys(validationationErrors || {}).length > 0) {
+        if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
@@ -130,7 +130,6 @@ const AdminRestaurants = () => {
 
     return (
         <Box data-testid="admin-restaurants-page">
-            {/* Toolbar */}
             <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
                 <Typography variant="h4" sx={{ fontWeight: 800, mr: "auto" }}>
                     Restaurant Management
@@ -161,7 +160,6 @@ const AdminRestaurants = () => {
                 Add Restaurant
             </Button>
 
-            {/* Table */}
             <TableContainer
                 data-testid="admin-restaurants-table"
                 component={Paper}
@@ -216,7 +214,6 @@ const AdminRestaurants = () => {
                 </Table>
             </TableContainer>
 
-            {/* Dialog */}
             <Dialog
                 data-testid="admin-restaurant-dialog"
                 open={openDialog}
@@ -253,9 +250,13 @@ const AdminRestaurants = () => {
                     <TextField
                         data-testid="admin-restaurant-rating-input"
                         label="Average rating"
-                        value={editing?.averageRating || ""}
+                        type="number"
+                        value={editing?.averageRating ?? ""}
                         onChange={(e) =>
-                            setEditing({ ...editing, averageRating: e.target.value })
+                            setEditing({
+                                ...editing,
+                                averageRating: Number(e.target.value),
+                            })
                         }
                     />
                     <TextField
@@ -270,11 +271,11 @@ const AdminRestaurants = () => {
                         data-testid="admin-restaurant-deliverytime-input"
                         label="Delivery Time (minutes)"
                         type="number"
-                        value={editing?.deliveryTimeEstimate || ""}
+                        value={editing?.deliveryTimeEstimate ?? ""}
                         onChange={(e) =>
                             setEditing({
                                 ...editing,
-                                deliveryTimeEstimate: e.target.value,
+                                deliveryTimeEstimate: Number(e.target.value),
                             })
                         }
                         error={!!errors.deliveryTimeEstimate}
