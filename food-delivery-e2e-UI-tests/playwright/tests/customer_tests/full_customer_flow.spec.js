@@ -41,7 +41,7 @@ test('customer checkout flow (skip if all restaurants closed)', async ({ page })
         break;
     }
 
-    test.skip(!restaurantOpened, 'All restaurants are CLOSED');
+    //test.skip(!restaurantOpened, 'All restaurants are CLOSED');
 
     // CART
     await page.getByTestId('header-cart-link').click();
